@@ -1,0 +1,10 @@
+.git
+.github
+frontend
+deployments
+scripts
+node_modules
+*.exe
+*.log
+.env
+tmp_*

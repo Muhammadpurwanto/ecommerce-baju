@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/Muhammadpurwanto/ecommerce-baju/services/common/pb/cart";
+
+message CartItem {
+    uint32 id = 1;
+    uint32 cart_id = 2;
+    uint32 product_id = 3;
+    int32 quantity = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+message CartResponse {
+    uint32 id = 1;
+    string user_id = 2;
+    string created_at = 3;
+    string updated_at = 4;
+    repeated CartItem items = 5;
+}
+
+message GetCartRequest {
+    string user_id = 1;
+}
+
+message AddItemRequest {
+    string user_id = 1;
+    uint32 product_id = 2;
+    int32 quantity = 3;
+}
+
+message UpdateItemRequest {
+    string user_id = 1;
+    uint32 item_id = 2;
+    int32 quantity = 3;
+}
+
+message RemoveItemRequest {
+    string user_id = 1;
+    uint32 item_id = 2;
+}
+
+message ClearCartRequest {
+    string user_id = 1;
+}
+
+message CartEmptyResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+service CartService {
+    rpc GetCart(GetCartRequest) returns (CartResponse);
+    rpc AddItem(AddItemRequest) returns (CartResponse);
+    rpc UpdateItem(UpdateItemRequest) returns (CartResponse);
+    rpc RemoveItem(RemoveItemRequest) returns (CartResponse);
+    rpc ClearCart(ClearCartRequest) returns (CartEmptyResponse);
+}

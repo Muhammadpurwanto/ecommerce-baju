@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/Muhammadpurwanto/ecommerce-baju/services/common/pb/order";
+
+message OrderItem {
+    uint32 id = 1;
+    uint32 product_id = 2;
+    int32 quantity = 3;
+    double price = 4;
+    double subtotal = 5;
+}
+
+message Order {
+    uint32 id = 1;
+    string order_number = 2;
+    string user_id = 3;
+    string status = 4;
+    double total_amount = 5;
+    double shipping_cost = 6;
+    string shipping_address = 7;
+    string courier = 8;
+    string tracking_number = 9;
+    string notes = 10;
+    string paid_at = 11;
+    string shipped_at = 12;
+    string created_at = 13;
+    string updated_at = 14;
+    repeated OrderItem items = 15;
+    string snap_token = 16;
+    string payment_url = 17;
+}
+
+message OrderItemRequest {
+    uint32 product_id = 1;
+    int32 quantity = 2;
+    double price = 3;
+}
+
+message CreateOrderRequest {
+    string user_id = 1;
+    double shipping_cost = 2;
+    string shipping_address = 3;
+    string courier = 4;
+    string notes = 5;
+    repeated OrderItemRequest items = 6;
+}
+
+message GetOrderByIDRequest {
+    uint32 id = 1;
+    string user_id = 2;
+    bool is_admin = 3;
+}
+
+message GetOrdersRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 per_page = 3;
+}
+
+message Meta {
+    int32 current_page = 1;
+    int32 per_page = 2;
+    int64 total_items = 3;
+    int32 total_pages = 4;
+}
+
+message OrderListResponse {
+    repeated Order data = 1;
+    Meta meta = 2;
+}
+
+message UpdateOrderStatusRequest {
+    uint32 id = 1;
+    string status = 2;
+}
+
+message CancelOrderRequest {
+    uint32 id = 1;
+    string user_id = 2;
+}
+
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (Order);
+    rpc GetOrderByID(GetOrderByIDRequest) returns (Order);
+    rpc GetMyOrders(GetOrdersRequest) returns (OrderListResponse);
+    rpc GetAllOrders(GetOrdersRequest) returns (OrderListResponse);
+    rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (Order);
+    rpc CancelOrder(CancelOrderRequest) returns (Order);
+}

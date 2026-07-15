@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/Muhammadpurwanto/ecommerce-baju/services/common/pb/payment";
+
+message Payment {
+    uint32 id = 1;
+    uint32 order_id = 2;
+    string user_id = 3;
+    double amount = 4;
+    string payment_type = 5;
+    string transaction_id = 6;
+    string status = 7;
+    string snap_token = 8;
+    string payment_url = 9;
+    string paid_at = 10;
+    string created_at = 11;
+    string updated_at = 12;
+}
+
+message CreatePaymentRequest {
+    string user_id = 1;
+    uint32 order_id = 2;
+    double amount = 3;
+}
+
+message GetPaymentByOrderIDRequest {
+    uint32 order_id = 1;
+    string user_id = 2;
+}
+
+message WebhookMidtransRequest {
+    string payload_json = 1;
+}
+
+message WebhookMidtransResponse {
+    string status = 1;
+    string message = 2;
+}
+
+service PaymentService {
+    rpc CreatePayment(CreatePaymentRequest) returns (Payment);
+    rpc GetPaymentByOrderID(GetPaymentByOrderIDRequest) returns (Payment);
+    rpc WebhookMidtrans(WebhookMidtransRequest) returns (WebhookMidtransResponse);
+}

@@ -1,0 +1,210 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secretpassword
+      # Buat script init untuk multi database
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./deployments/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  user-service:
+    build:
+      context: .
+      dockerfile: ./services/user/Dockerfile
+    container_name: ecommerce-user-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./services/user/.env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      REDIS_PASSWORD: redispassword
+      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_PUBLIC_URL: http://minio:9000
+
+  product-service:
+    build:
+      context: .
+      dockerfile: ./services/product/Dockerfile
+    container_name: ecommerce-product-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ./services/product/.env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: ./services/cart/Dockerfile
+    container_name: ecommerce-cart-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ./services/cart/.env
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+
+  order-service:
+    build:
+      context: .
+      dockerfile: ./services/order/Dockerfile
+    container_name: ecommerce-order-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:                    
+        condition: service_healthy
+    env_file:
+      - ./services/order/.env
+    environment:
+      MYSQL_HOST: mysql
+      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+      PRODUCT_SERVICE_URL: product-service:50053
+      CART_SERVICE_URL: cart-service:50054
+      PAYMENT_SERVICE_URL: payment-service:50056
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: ./services/payment/Dockerfile
+    container_name: ecommerce-payment-service
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:                  
+          condition: service_healthy
+    env_file:
+      - ./services/payment/.env
+    environment:
+      MYSQL_HOST: mysql
+      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+
+  notification-service:
+      build: ./services/notification
+      container_name: ecommerce-notification-service
+      ports:
+        - "8087:8087"
+      depends_on:
+        rabbitmq:                    
+          condition: service_healthy
+      env_file:
+        - ./services/notification/.env
+      environment:
+        RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: ./services/gateway/Dockerfile
+    container_name: ecommerce-gateway-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./services/gateway/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PASSWORD: redispassword
+    depends_on:
+      - user-service
+      - product-service
+      - cart-service
+      - order-service
+      - payment-service
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redispassword
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ecommerce-rabbitmq
+    ports:
+      - "5672:5672"   # Port aplikasi
+      - "15672:15672" # Port UI Management (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: rmqadmin
+      RABBITMQ_DEFAULT_PASS: rmqpassword
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  minio:
+    image: minio/minio:latest
+    container_name: ecommerce-minio
+    ports:
+      - "9000:9000"   # Port API S3
+      - "9001:9001"   # Port Web UI/Console
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  frontend-service:
+    build: ./frontend
+    container_name: ecommerce-frontend-service
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+      API_URL: http://gateway-service:8080/api/v1
+    depends_on:
+      - gateway-service
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:

@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/Muhammadpurwanto/ecommerce-baju/services/common/pb/user";
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (UserResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UserResponse);
+  rpc GetAllUsers(GetAllUsersRequest) returns (GetAllUsersResponse);
+  rpc GetUserByID(GetUserByIDRequest) returns (UserResponse);
+
+  // Address Services
+  rpc GetAddresses(GetAddressesRequest) returns (GetAddressesResponse);
+  rpc GetAddressByID(GetAddressByIDRequest) returns (AddressResponse);
+  rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
+  rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
+  rpc DeleteAddress(DeleteAddressRequest) returns (DeleteAddressResponse);
+  rpc SetDefaultAddress(SetDefaultAddressRequest) returns (AddressResponse);
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  optional string name = 2;
+  optional string phone = 3; 
+  optional string avatar_url = 4;
+}
+
+message GetAllUsersRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+}
+
+message GetUserByIDRequest {
+  string id = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string phone = 4;
+  string avatar_url = 5;
+  string role = 6;
+  bool is_active = 7;
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+message MetaData {
+  int32 page = 1;
+  int32 per_page = 2;
+  int64 total = 3;
+  int32 total_pages = 4;
+}
+
+message GetAllUsersResponse {
+  repeated UserResponse data = 1;
+  MetaData meta = 2;
+}
+
+// Address Messages
+message GetAddressesRequest {
+  string user_id = 1;
+}
+
+message GetAddressesResponse {
+  repeated AddressResponse data = 1;
+}
+
+message GetAddressByIDRequest {
+  uint64 id = 1;
+  string user_id = 2;
+}
+
+message CreateAddressRequest {
+  string user_id = 1;
+  string label = 2;
+  string recipient = 3;
+  string phone = 4;
+  string province = 5;
+  string city = 6;
+  string district = 7;
+  string postal_code = 8;
+  string detail = 9;
+  bool is_default = 10;
+}
+
+message UpdateAddressRequest {
+  uint64 id = 1;
+  string user_id = 2;
+  optional string label = 3;
+  optional string recipient = 4;
+  optional string phone = 5;
+  optional string province = 6;
+  optional string city = 7;
+  optional string district = 8;
+  optional string postal_code = 9;
+  optional string detail = 10;
+  optional bool is_default = 11;
+}
+
+message DeleteAddressRequest {
+  uint64 id = 1;
+  string user_id = 2;
+}
+
+message DeleteAddressResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SetDefaultAddressRequest {
+  uint64 id = 1;
+  string user_id = 2;
+}
+
+message AddressResponse {
+  uint64 id = 1;
+  string user_id = 2;
+  string label = 3;
+  string recipient = 4;
+  string phone = 5;
+  string province = 6;
+  string city = 7;
+  string district = 8;
+  string postal_code = 9;
+  string detail = 10;
+  bool is_default = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}

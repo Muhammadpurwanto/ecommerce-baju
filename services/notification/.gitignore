@@ -1,0 +1,25 @@
+# Binaries
+tmp_notif
+tmp_notif.exe
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Environment files (secrets)
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+.env
+.env.docker
