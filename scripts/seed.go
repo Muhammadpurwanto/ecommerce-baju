@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -18,7 +19,24 @@ var baseURL = "http://localhost:8080/api/v1"
 func main() {
 	log.Println("=== Starting Seed & Test ===")
 
-	// 1. Register User
+	// 1. Ambil konfigurasi dari environment variables (opsional)
+	if envURL := os.Getenv("API_URL"); envURL != "" {
+		baseURL = envURL
+	}
+	dbHost := os.Getenv("MYSQL_HOST")
+	if dbHost == "" {
+		dbHost = "127.0.0.1"
+	}
+	dbPort := os.Getenv("MYSQL_PORT")
+	if dbPort == "" {
+		dbPort = "3306"
+	}
+	dbPass := os.Getenv("MYSQL_PASSWORD")
+	if dbPass == "" {
+		dbPass = "secretpassword"
+	}
+
+	// 2. Register User
 	email := fmt.Sprintf("tester_%d@example.com", time.Now().Unix())
 	password := "rahasia123"
 	registerPayload := map[string]string{
@@ -31,9 +49,9 @@ func main() {
 	// Tunggu sebentar agar RabbitMQ sempat memproses user.registered
 	time.Sleep(2 * time.Second)
 
-	// 2. Ubah role user menjadi 'admin' via koneksi database langsung
+	// 3. Ubah role user menjadi 'admin' via koneksi database langsung
 	log.Println("Updating user role to admin via database...")
-	dsn := "root:secretpassword@tcp(127.0.0.1:3306)/user_db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("root:%s@tcp(%s:%s)/user_db?charset=utf8mb4&parseTime=True&loc=Local", dbPass, dbHost, dbPort)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to user_db: %v", err)

@@ -4,7 +4,7 @@ services:
     container_name: ecommerce-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: secretpassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
     ports:
       - "3306:3306"
     volumes:
@@ -29,15 +29,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    env_file:
-      - ./services/user/.env.production
     environment:
+      APP_PORT: "8082"
       MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
+      MYSQL_DATABASE: user_db
+      JWT_SECRET: ${JWT_SECRET:-rahasia-negara-paling-aman-yang-sangat-panjang-sekali}
       REDIS_HOST: redis
-      REDIS_PASSWORD: redispassword
-      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rmqadmin:rmqpassword@rabbitmq:5672/}
       MINIO_ENDPOINT: minio:9000
-      MINIO_PUBLIC_URL: https://storage.maspurr.cloud
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-password123}
+      MINIO_BUCKET: users
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://storage.maspurr.cloud}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
+      FRONTEND_CALLBACK_URL: ${FRONTEND_CALLBACK_URL}
 
   product-service:
     image: maspurr/ecommerce-product:latest
@@ -48,13 +61,22 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    env_file:
-      - ./services/product/.env.production
     environment:
+      APP_PORT: "8083"
       MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
+      MYSQL_DATABASE: product_db
       REDIS_HOST: redis
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_URL: https://storage.maspurr.cloud
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-password123}
+      MINIO_BUCKET: products
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-https://storage.maspurr.cloud}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
 
   cart-service:
     image: maspurr/ecommerce-cart:latest
@@ -65,11 +87,17 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    env_file:
-      - ./services/cart/.env.production
     environment:
+      APP_PORT: "8084"
       MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
+      MYSQL_DATABASE: cart_db
       REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
 
   order-service:
     image: maspurr/ecommerce-order:latest
@@ -82,14 +110,18 @@ services:
         condition: service_healthy
       rabbitmq:                    
         condition: service_healthy
-    env_file:
-      - ./services/order/.env.production
     environment:
+      APP_PORT: "8085"
       MYSQL_HOST: mysql
-      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
+      MYSQL_DATABASE: order_db
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rmqadmin:rmqpassword@rabbitmq:5672/}
       PRODUCT_SERVICE_URL: product-service:50053
       CART_SERVICE_URL: cart-service:50054
       PAYMENT_SERVICE_URL: payment-service:50056
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
 
   payment-service:
     image: maspurr/ecommerce-payment:latest
@@ -101,26 +133,39 @@ services:
       mysql:
         condition: service_healthy
       rabbitmq:                  
-          condition: service_healthy
-    env_file:
-      - ./services/payment/.env.production
+        condition: service_healthy
     environment:
+      APP_PORT: "8086"
       MYSQL_HOST: mysql
-      RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secretpassword}
+      MYSQL_DATABASE: payment_db
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+      MIDTRANS_IS_PROD: ${MIDTRANS_IS_PROD:-false}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rmqadmin:rmqpassword@rabbitmq:5672/}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
+      FRONTEND_URL: ${FRONTEND_URL:-https://maspurr.cloud}
 
   notification-service:
-      image: maspurr/ecommerce-notification:latest
-      container_name: ecommerce-notification-service
-      restart: always
-      ports:
-        - "8087:8087"
-      depends_on:
-        rabbitmq:                    
-          condition: service_healthy
-      env_file:
-        - ./services/notification/.env.production
-      environment:
-        RABBITMQ_URL: amqp://rmqadmin:rmqpassword@rabbitmq:5672/
+    image: maspurr/ecommerce-notification:latest
+    container_name: ecommerce-notification-service
+    restart: always
+    ports:
+      - "8087:8087"
+    depends_on:
+      rabbitmq:                    
+        condition: service_healthy
+    environment:
+      APP_PORT: "8087"
+      SMTP_HOST: ${SMTP_HOST:-sandbox.smtp.mailtrap.io}
+      SMTP_PORT: ${SMTP_PORT:-2525}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SENDER_NAME: ${SENDER_NAME:-Ecommerce Baju API}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rmqadmin:rmqpassword@rabbitmq:5672/}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
 
   gateway-service:
     image: maspurr/ecommerce-gateway:latest
@@ -128,28 +173,40 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    env_file:
-      - ./services/gateway/.env.production
-    environment:
-      REDIS_HOST: redis
-      REDIS_PASSWORD: redispassword
     depends_on:
       - user-service
       - product-service
       - cart-service
       - order-service
       - payment-service
+    environment:
+      APP_PORT: "8080"
+      JWT_SECRET: ${JWT_SECRET:-rahasia-negara-paling-aman-yang-sangat-panjang-sekali}
+      AUTH_SERVICE_URL: user-service:50052
+      USER_SERVICE_URL: user-service:50052
+      PRODUCT_SERVICE_URL: product-service:50053
+      CART_SERVICE_URL: cart-service:50054
+      ORDER_SERVICE_URL: order-service:50055
+      PAYMENT_SERVICE_URL: payment-service:50056
+      AUTH_SERVICE_HTTP_URL: http://user-service:8082
+      PRODUCT_SERVICE_HTTP_URL: http://product-service:8083
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
+      RATE_LIMIT_MAX: "100"
+      RATE_LIMIT_EXPIRATION: "60"
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://maspurr.cloud,http://maspurr.cloud}
 
   redis:
     image: redis:7-alpine
     container_name: ecommerce-redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redispassword
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispassword}", "ping"]
       interval: 10s
       retries: 5
       start_period: 10s
@@ -161,8 +218,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: rmqadmin
-      RABBITMQ_DEFAULT_PASS: rmqpassword
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rmqadmin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-rmqpassword}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -176,8 +233,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: password123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -194,8 +251,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://api.maspurr.cloud/api/v1
-      API_URL: http://gateway-service:8080/api/v1
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.maspurr.cloud/api/v1}
+      API_URL: ${API_URL:-http://gateway-service:8080/api/v1}
     depends_on:
       - gateway-service
 
