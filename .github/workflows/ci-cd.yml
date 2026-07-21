@@ -74,7 +74,7 @@ jobs:
       - name: Run E2E Smoke Test (seed.go)
         run: |
           # Jalankan E2E testing
-          go run scripts/seed.go
+          cd scripts && go run seed.go
 
       - name: Shutdown Docker Compose
         if: always()
