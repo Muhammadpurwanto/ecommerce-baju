@@ -76,6 +76,11 @@ jobs:
           # Jalankan E2E testing
           cd scripts && go run seed.go
 
+      - name: Print Container Logs on Failure
+        if: failure()
+        run: |
+          docker compose logs
+
       - name: Shutdown Docker Compose
         if: always()
         run: |
