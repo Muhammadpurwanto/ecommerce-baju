@@ -109,23 +109,9 @@ func main() {
 	prodResp := sendRequest("POST", "/products/", prodPayload, token)
 	prodID := uint(prodResp["data"].(map[string]interface{})["id"].(float64))
 
-	// 7. Create Variant
-	varPayload := map[string]interface{}{
-		"product_id":       prodID,
-		"sku":              fmt.Sprintf("FLN-M-%d", time.Now().Unix()),
-		"size":             "M",
-		"color":            "Merah",
-		"stock":            100,
-		"price_adjustment": 0,
-	}
-	varRoute := fmt.Sprintf("/products/%d/variants", prodID)
-	varResp := sendRequest("POST", varRoute, varPayload, token)
-	varID := uint(varResp["data"].(map[string]interface{})["id"].(float64))
-
 	// 8. Add to Cart
 	cartPayload := map[string]interface{}{
 		"product_id": prodID,
-		"variant_id": varID,
 		"quantity":   2,
 	}
 	sendRequest("POST", "/carts/items", cartPayload, token)
@@ -140,7 +126,6 @@ func main() {
 		"items": []map[string]interface{}{
 			{
 				"product_id": prodID,
-				"variant_id": varID,
 				"quantity":   2,
 				"price":      150000,
 			},
