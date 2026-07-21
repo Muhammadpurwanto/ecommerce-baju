@@ -41,7 +41,7 @@ services:
       REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rmqadmin:rmqpassword@rabbitmq:5672/}
-      MINIO_ENDPOINT: minio:9000
+      MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-password123}
       MINIO_BUCKET: users
@@ -71,7 +71,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
-      MINIO_ENDPOINT: minio:9000
+      MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-password123}
       MINIO_BUCKET: products
